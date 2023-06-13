@@ -70,7 +70,7 @@ resource "aws_db_instance" "harsh_db_instance" {
   skip_final_snapshot  = true
   db_subnet_group_name  = aws_db_subnet_group.aurora_subnet_group.name
   vpc_security_group_ids = [aws_security_group.aurora_security_group.id]
-  multi_az    = true # Custom for Oracle does not support multi-az
+  multi_az    = false
   tags={
     Name="Harsh Mittal"
     Owner="harsh.mittal@cloudeq.com"
@@ -94,11 +94,48 @@ resource "aws_db_instance" "harsh1_db_instance" {
   username               = "harsh1"
   password               = "harshmittal1"
   parameter_group_name = "default.mariadb10.6"
-  multi_az = true
+  multi_az = false
   tags={
     Name="Harsh Mittal"
     Owner="harsh.mittal@cloudeq.com"
     Purpose="POC"
   }
   skip_final_snapshot  = true
+}
+
+# Create an RDS cluster
+resource "aws_rds_cluster" "harsh_cluster" {
+  cluster_identifier      = "harsh-cluster"
+  engine                  = "aurora-mysql"
+#   engine_version          = "5.7.mysql_aurora.2.11.2"
+  master_username         = "harsh2"
+  master_password         = "harshmittal23"
+  backup_retention_period = 1
+  preferred_backup_window = "02:00-03:00"
+  #for encryption of storage make it true and specify kms_keyid
+#   storage_encrypted  = true         
+#   kms_key_id         = "harsh-kms-key" 
+  skip_final_snapshot     = true
+  db_subnet_group_name    = aws_db_subnet_group.aurora_subnet_group.name
+  vpc_security_group_ids  = [aws_security_group.aurora_security_group.id]
+  availability_zones = ["ap-southeast-1a","ap-southeast-1b"]
+  tags={
+    Name="Harsh Mittal"
+    Owner="harsh.mittal@cloudeq.com"
+    Purpose="POC"
+  }
+}
+
+# Create an RDS instance within the cluster
+resource "aws_rds_cluster_instance" "harsh_cluster_instance" {
+  identifier              = "harsh-cluster-instance"
+  cluster_identifier      = aws_rds_cluster.harsh_cluster.id
+  engine                  = "aurora-mysql"
+  instance_class          = "db.t3.medium"
+  availability_zone       = "ap-southeast-1a"
+  tags={
+    Name="Harsh Mittal"
+    Owner="harsh.mittal@cloudeq.com"
+    Purpose="POC"
+  }
 }
